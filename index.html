@@ -53,6 +53,10 @@
                     <span class="stat-label">Score</span>
                     <span class="stat-value" id="score">0</span>
                 </div>
+                <div class="stat-item">
+                    <span class="stat-label">Descobertos</span>
+                    <span class="stat-value" id="animals-discovered">0/9</span>
+                </div>
             </div>
         </header>
 
@@ -66,6 +70,11 @@
                         <h2>EcoMemory</h2>
                     </div>
                     <p class="mission-text">Missão: Preservar a fauna brasileira através da tecnologia</p>
+                    <div class="game-info">
+                        <p>💡 As descrições dos animais aparecem apenas uma vez durante toda a sessão de jogo e fecham
+                            automaticamente em 3 segundos</p>
+                        <p>🔄 Use "Nova Sessão" para ver todas as descrições novamente</p>
+                    </div>
                     <div class="level-preview">
                         <h3>Nível <span id="preview-level">1</span></h3>
                         <p id="preview-description">2 pares de animais • 15 movimentos</p>
@@ -73,10 +82,16 @@
                             <div class="difficulty-fill" id="difficulty-fill"></div>
                         </div>
                     </div>
-                    <button class="start-btn" id="start-btn">
-                        <span class="btn-icon">⚡</span>
-                        Iniciar Missão
-                    </button>
+                    <div class="start-buttons">
+                        <button class="start-btn" id="start-btn">
+                            <span class="btn-icon">⚡</span>
+                            Iniciar Missão
+                        </button>
+                        <button class="new-session-btn" id="new-session-btn">
+                            <span class="btn-icon">🔄</span>
+                            Nova Sessão
+                        </button>
+                    </div>
                     <div class="social-impact">
                         <p>🌍 Cada jogo contribui para a conscientização ambiental</p>
                     </div>
@@ -91,7 +106,13 @@
             <!-- Animal Info Modal -->
             <div class="modal" id="animal-modal">
                 <div class="modal-content">
-                    <button class="modal-close" id="modal-close">&times;</button>
+                    <div class="modal-header">
+                        <div class="auto-close-timer" id="auto-close-timer">
+                            <div class="timer-bar" id="timer-bar"></div>
+                            <span class="timer-text">Fecha automaticamente em <span id="timer-seconds">3</span>s</span>
+                        </div>
+                        <button class="modal-close" id="modal-close">&times;</button>
+                    </div>
                     <div class="animal-info">
                         <div class="animal-image">
                             <img id="modal-animal-image" src="" alt="">
@@ -134,10 +155,27 @@
                                 <span class="stat-text">Pares Encontrados</span>
                             </div>
                         </div>
-                        <button class="restart-btn" id="restart-btn">
-                            <span class="btn-icon">🔄</span>
-                            Jogar Novamente
-                        </button>
+                        <div class="auto-advance-timer" id="auto-advance-timer" style="display: none;">
+                            <div class="advance-timer-bar">
+                                <div class="advance-timer-fill" id="advance-timer-fill"></div>
+                            </div>
+                            <p class="advance-timer-text">Próxima fase em <span id="advance-seconds">3</span> segundos
+                            </p>
+                        </div>
+                        <div class="game-over-buttons">
+                            <button class="restart-btn" id="restart-btn">
+                                <span class="btn-icon">🔄</span>
+                                Jogar Novamente
+                            </button>
+                            <button class="next-level-btn" id="next-level-btn" style="display: none;">
+                                <span class="btn-icon">⏭️</span>
+                                Próxima Fase
+                            </button>
+                            <button class="menu-btn" id="menu-btn">
+                                <span class="btn-icon">🏠</span>
+                                Menu Principal
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -244,17 +244,20 @@ let gameState = {
     currentLevel: 1,
     score: 0,
     timeBonus: 0,
-    startTime: null
+    startTime: null,
+    shownAnimals: new Set() // Controla quais animais já tiveram suas descrições mostradas
 };
 
 // Elementos DOM
 const startScreen = document.getElementById('start-screen');
 const gameBoard = document.getElementById('game-board');
 const startBtn = document.getElementById('start-btn');
+const newSessionBtn = document.getElementById('new-session-btn');
 const movesCount = document.getElementById('moves-count');
 const movesRemaining = document.getElementById('moves-remaining');
 const pairsFound = document.getElementById('pairs-found');
 const scoreDisplay = document.getElementById('score');
+const animalsDiscoveredDisplay = document.getElementById('animals-discovered');
 const currentLevelDisplay = document.getElementById('current-level');
 const levelInfo = document.getElementById('level-info');
 const levelUpBtn = document.getElementById('level-up');
@@ -266,6 +269,18 @@ const animalModal = document.getElementById('animal-modal');
 const gameOverModal = document.getElementById('game-over-modal');
 const modalClose = document.getElementById('modal-close');
 const restartBtn = document.getElementById('restart-btn');
+const nextLevelBtn = document.getElementById('next-level-btn');
+const menuBtn = document.getElementById('menu-btn');
+
+// Função para iniciar nova sessão completa (limpa todos os animais mostrados)
+function startNewSession() {
+    gameState.shownAnimals = new Set();
+    gameState.currentLevel = 1;
+    gameState.score = 0;
+    resetGameState();
+    updateUI();
+    updateLevelPreview();
+}
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
@@ -283,6 +298,10 @@ function initializeGame() {
 
 function resetGameState() {
     const config = levelConfig[gameState.currentLevel];
+    const currentLevel = gameState.currentLevel || 1;
+    const currentScore = gameState.score || 0;
+    const shownAnimals = gameState.shownAnimals || new Set();
+    
     gameState = {
         cards: [],
         flippedCards: [],
@@ -291,17 +310,21 @@ function resetGameState() {
         maxMoves: config.moves,
         gameStarted: false,
         gameEnded: false,
-        currentLevel: gameState.currentLevel || 1,
-        score: gameState.score || 0,
+        currentLevel: currentLevel,
+        score: currentScore,
         timeBonus: 0,
-        startTime: null
+        startTime: null,
+        shownAnimals: shownAnimals // Preserva os animais já mostrados durante toda a sessão
     };
 }
 
 function attachEventListeners() {
     startBtn.addEventListener('click', startGame);
+    newSessionBtn.addEventListener('click', startNewSession);
     modalClose.addEventListener('click', closeModal);
     restartBtn.addEventListener('click', restartGame);
+    nextLevelBtn.addEventListener('click', goToNextLevel);
+    menuBtn.addEventListener('click', goToMenu);
     levelUpBtn.addEventListener('click', () => changeLevel(1));
     levelDownBtn.addEventListener('click', () => changeLevel(-1));
     
@@ -311,6 +334,8 @@ function attachEventListeners() {
             closeModal();
         }
     });
+    
+    // Remover as funções de pausa do timer para simplificar
     
     gameOverModal.addEventListener('click', function(e) {
         if (e.target === gameOverModal) {
@@ -323,6 +348,9 @@ function changeLevel(direction) {
     const newLevel = gameState.currentLevel + direction;
     if (newLevel >= 1 && newLevel <= 10) {
         gameState.currentLevel = newLevel;
+        
+        // NÃO limpar animais mostrados ao mudar de nível - preservar durante toda a sessão
+        
         resetGameState();
         updateUI();
         updateLevelPreview();
@@ -498,10 +526,15 @@ function handleMatch(card1, card2, cardElement1, cardElement2) {
     cardElement1.classList.add('matched');
     cardElement2.classList.add('matched');
     
-    // Mostrar informações do animal
-    setTimeout(() => {
-        showAnimalInfo(card1.animal);
-    }, 500);
+    // Mostrar informações do animal apenas se ainda não foi mostrado
+    if (!gameState.shownAnimals.has(card1.animal)) {
+        setTimeout(() => {
+            showAnimalInfo(card1.animal);
+            gameState.shownAnimals.add(card1.animal);
+            updateUI(); // Atualizar contador de animais descobertos
+            saveProgress(); // Salvar progresso
+        }, 500);
+    }
     
     updateUI();
     
@@ -526,6 +559,11 @@ function handleMismatch(cardElement1, cardElement2) {
         checkGameEnd();
     }, 800);
 }
+
+let modalAutoCloseTimer = null;
+let timerCountdownInterval = null;
+let autoAdvanceTimer = null;
+let autoAdvanceInterval = null;
 
 function showAnimalInfo(animal) {
     const data = animalsData[animal];
@@ -574,11 +612,150 @@ function showAnimalInfo(animal) {
     // Adicionar pontos por descobrir animal
     gameState.score += 50;
     updateUI();
+    
+    // Iniciar contador visual
+    startAutoCloseTimer();
+}
+
+function startAutoCloseTimer() {
+    const timerSeconds = document.getElementById('timer-seconds');
+    const timerBar = document.getElementById('timer-bar');
+    
+    // Resetar a animação da barra
+    timerBar.style.animation = 'none';
+    timerBar.offsetHeight; // Trigger reflow
+    timerBar.style.animation = 'timerCountdown 3s linear forwards';
+    
+    let secondsLeft = 3;
+    timerSeconds.textContent = secondsLeft;
+    
+    // Limpar timers anteriores
+    clearTimeout(modalAutoCloseTimer);
+    clearInterval(timerCountdownInterval);
+    
+    // Contador de segundos
+    timerCountdownInterval = setInterval(() => {
+        secondsLeft--;
+        timerSeconds.textContent = secondsLeft;
+        
+        if (secondsLeft <= 0) {
+            clearInterval(timerCountdownInterval);
+        }
+    }, 1000);
+    
+    // Auto-fechar após 3 segundos
+    modalAutoCloseTimer = setTimeout(() => {
+        closeModal();
+    }, 3000);
+}
+
+function startAutoCloseTimer() {
+    const timerSeconds = document.getElementById('timer-seconds');
+    const timerBar = document.getElementById('timer-bar');
+    
+    // Resetar a animação da barra
+    timerBar.style.animation = 'none';
+    timerBar.offsetHeight; // Trigger reflow
+    timerBar.style.animation = 'timerCountdown 3s linear forwards';
+    
+    let secondsLeft = 3;
+    timerSeconds.textContent = secondsLeft;
+    
+    // Limpar timers anteriores
+    clearTimeout(modalAutoCloseTimer);
+    clearInterval(timerCountdownInterval);
+    
+    // Contador de segundos
+    timerCountdownInterval = setInterval(() => {
+        secondsLeft--;
+        timerSeconds.textContent = secondsLeft;
+        
+        if (secondsLeft <= 0) {
+            clearInterval(timerCountdownInterval);
+        }
+    }, 1000);
+    
+    // Auto-fechar após 3 segundos
+    modalAutoCloseTimer = setTimeout(() => {
+        closeModal();
+    }, 3000);
+}
+
+function startAutoAdvanceTimer() {
+    const autoAdvanceTimerElement = document.getElementById('auto-advance-timer');
+    const advanceSecondsElement = document.getElementById('advance-seconds');
+    const advanceTimerFill = document.getElementById('advance-timer-fill');
+    
+    // Mostrar o timer
+    autoAdvanceTimerElement.style.display = 'block';
+    
+    // Resetar a animação
+    advanceTimerFill.style.animation = 'none';
+    advanceTimerFill.offsetHeight; // Trigger reflow
+    advanceTimerFill.style.animation = 'advanceCountdown 3s linear forwards';
+    
+    let secondsLeft = 3;
+    advanceSecondsElement.textContent = secondsLeft;
+    
+    // Limpar timers anteriores
+    clearTimeout(autoAdvanceTimer);
+    clearInterval(autoAdvanceInterval);
+    
+    // Contador de segundos
+    autoAdvanceInterval = setInterval(() => {
+        secondsLeft--;
+        advanceSecondsElement.textContent = secondsLeft;
+        
+        if (secondsLeft <= 0) {
+            clearInterval(autoAdvanceInterval);
+        }
+    }, 1000);
+    
+    // Auto-avançar após 3 segundos
+    autoAdvanceTimer = setTimeout(() => {
+        gameState.currentLevel++;
+        resetGameState();
+        updateUI();
+        updateLevelPreview();
+        
+        // Fechar modal de game over e iniciar próxima fase automaticamente
+        setTimeout(() => {
+            closeModal();
+            startGame();
+        }, 500);
+    }, 3000);
 }
 
 function closeModal() {
     animalModal.classList.remove('active');
     gameOverModal.classList.remove('active');
+    
+    // Esconder timer de avanço automático
+    const autoAdvanceTimerElement = document.getElementById('auto-advance-timer');
+    if (autoAdvanceTimerElement) {
+        autoAdvanceTimerElement.style.display = 'none';
+    }
+    
+    // Limpar todos os timers
+    if (modalAutoCloseTimer) {
+        clearTimeout(modalAutoCloseTimer);
+        modalAutoCloseTimer = null;
+    }
+    
+    if (timerCountdownInterval) {
+        clearInterval(timerCountdownInterval);
+        timerCountdownInterval = null;
+    }
+    
+    if (autoAdvanceTimer) {
+        clearTimeout(autoAdvanceTimer);
+        autoAdvanceTimer = null;
+    }
+    
+    if (autoAdvanceInterval) {
+        clearInterval(autoAdvanceInterval);
+        autoAdvanceInterval = null;
+    }
 }
 
 function checkGameEnd() {
@@ -628,6 +805,11 @@ function endGame(victory) {
         }
         if (gameState.currentLevel < 10) {
             message += ` Próximo nível desbloqueado!`;
+            // Mostrar botão de próxima fase
+            nextLevelBtn.style.display = 'inline-flex';
+        } else {
+            message += ' 🎉 Você completou todos os níveis!';
+            nextLevelBtn.style.display = 'none';
         }
         
         gameOverMessage.textContent = message;
@@ -637,10 +819,7 @@ function endGame(victory) {
         
         // Auto-avançar para próximo nível se não for o último
         if (gameState.currentLevel < 10) {
-            setTimeout(() => {
-                gameState.currentLevel++;
-                updateLevelPreview();
-            }, 2000);
+            startAutoAdvanceTimer();
         }
     } else {
         gameOverIcon.textContent = '🔄';
@@ -648,6 +827,9 @@ function endGame(victory) {
         gameOverTitle.textContent = 'Missão Incompleta';
         gameOverTitle.style.color = '#ffaa00';
         gameOverMessage.textContent = 'Os animais ainda precisam da sua ajuda! Tente novamente e complete a missão de preservação.';
+        
+        // Esconder botão de próxima fase
+        nextLevelBtn.style.display = 'none';
     }
     
     finalMoves.textContent = gameState.moves;
@@ -683,6 +865,39 @@ function createConfetti() {
 
 function restartGame() {
     closeModal();
+    
+    // Manter os animais mostrados mesmo ao reiniciar - só limpar em nova sessão completa
+    
+    resetGameState();
+    startScreen.style.display = 'flex';
+    gameBoard.classList.remove('active');
+    gameBoard.innerHTML = '';
+    updateUI();
+}
+
+function goToNextLevel() {
+    if (gameState.currentLevel < 10) {
+        // Cancelar timer automático
+        if (autoAdvanceTimer) {
+            clearTimeout(autoAdvanceTimer);
+            autoAdvanceTimer = null;
+        }
+        if (autoAdvanceInterval) {
+            clearInterval(autoAdvanceInterval);
+            autoAdvanceInterval = null;
+        }
+        
+        closeModal();
+        gameState.currentLevel++;
+        resetGameState();
+        updateUI();
+        updateLevelPreview();
+        startGame();
+    }
+}
+
+function goToMenu() {
+    closeModal();
     resetGameState();
     startScreen.style.display = 'flex';
     gameBoard.classList.remove('active');
@@ -692,11 +907,13 @@ function restartGame() {
 
 function updateUI() {
     const config = levelConfig[gameState.currentLevel];
+    const totalAnimals = Object.keys(animalsData).length;
     
     movesCount.textContent = gameState.moves;
     movesRemaining.textContent = gameState.maxMoves - gameState.moves;
     pairsFound.textContent = `${gameState.matchedPairs}/${config.pairs}`;
     scoreDisplay.textContent = gameState.score.toLocaleString();
+    animalsDiscoveredDisplay.textContent = `${gameState.shownAnimals.size}/${totalAnimals}`;
     currentLevelDisplay.textContent = gameState.currentLevel;
     levelInfo.textContent = `${config.pairs} pares • ${config.moves} movimentos`;
     
@@ -762,6 +979,7 @@ function saveProgress() {
     const progress = {
         currentLevel: gameState.currentLevel,
         totalScore: gameState.score,
+        shownAnimals: Array.from(gameState.shownAnimals),
         completedLevels: JSON.parse(localStorage.getItem('ecoMemoryCompleted') || '[]'),
         bestScores: JSON.parse(localStorage.getItem('ecoMemoryBestScores') || '{}')
     };
@@ -776,6 +994,7 @@ function loadProgress() {
         const progress = JSON.parse(saved);
         gameState.currentLevel = progress.currentLevel || 1;
         gameState.score = progress.totalScore || 0;
+        gameState.shownAnimals = new Set(progress.shownAnimals || []);
     }
 }
 

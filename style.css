@@ -367,9 +367,24 @@ body::before {
 .mission-text {
     font-size: 1.1rem;
     line-height: 1.6;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
     color: var(--secondary-text);
     font-style: italic;
+}
+
+.game-info {
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 10px;
+    padding: 10px 15px;
+    margin-bottom: 25px;
+}
+
+.game-info p {
+    font-size: 0.9rem;
+    color: var(--accent-text);
+    margin: 0;
+    line-height: 1.4;
 }
 
 .level-preview {
@@ -421,9 +436,15 @@ body::before {
     margin: 0;
 }
 
-.start-btn {
-    background: linear-gradient(135deg, var(--primary-text), var(--warning-color));
-    color: white;
+.start-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.start-btn, .new-session-btn {
     border: none;
     padding: 15px 30px;
     font-size: 1.2rem;
@@ -431,19 +452,32 @@ body::before {
     border-radius: 50px;
     cursor: pointer;
     transition: var(--transition-medium);
-    margin-top: 20px;
     display: inline-flex;
     align-items: center;
     gap: 10px;
     box-shadow: var(--card-shadow);
+    color: white;
+}
+
+.start-btn {
+    background: linear-gradient(135deg, var(--primary-text), var(--warning-color));
 }
 
 .start-btn:hover {
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(233, 69, 96, 0.4);
+    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
 }
 
-.start-btn:active {
+.new-session-btn {
+    background: linear-gradient(135deg, var(--accent-text), var(--secondary-text));
+}
+
+.new-session-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+}
+
+.start-btn:active, .new-session-btn:active {
     transform: translateY(-1px) scale(1.02);
 }
 
@@ -658,21 +692,78 @@ body::before {
     to { transform: translateY(0) scale(1); }
 }
 
-.modal-close {
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.auto-close-timer {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    max-width: 200px;
+}
+
+.timer-bar {
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.timer-bar::after {
+    content: '';
     position: absolute;
-    top: 15px;
-    right: 20px;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--warning-color), var(--danger-color));
+    border-radius: 2px;
+    animation: timerCountdown 3s linear forwards;
+}
+
+@keyframes timerCountdown {
+    from { width: 100%; }
+    to { width: 0%; }
+}
+
+.timer-text {
+    font-size: 0.8rem;
+    color: var(--secondary-text);
+    opacity: 0.8;
+}
+
+#timer-seconds {
+    color: var(--warning-color);
+    font-weight: 600;
+}
+
+.modal-close {
     background: none;
     border: none;
     font-size: 2rem;
     color: var(--accent-text);
     cursor: pointer;
     transition: var(--transition-fast);
+    padding: 5px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-close:hover {
     color: var(--primary-text);
     transform: scale(1.1);
+    background: rgba(0, 212, 255, 0.1);
 }
 
 .animal-info {
@@ -892,9 +983,14 @@ body::before {
     letter-spacing: 1px;
 }
 
-.restart-btn {
-    background: linear-gradient(135deg, var(--success-color), var(--accent-text));
-    color: white;
+.game-over-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.restart-btn, .next-level-btn, .menu-btn {
     border: none;
     padding: 15px 30px;
     font-size: 1.2rem;
@@ -906,11 +1002,75 @@ body::before {
     align-items: center;
     gap: 10px;
     box-shadow: var(--card-shadow);
+    color: white;
+}
+
+.restart-btn {
+    background: linear-gradient(135deg, var(--success-color), var(--accent-text));
 }
 
 .restart-btn:hover {
     transform: translateY(-3px) scale(1.05);
     box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+}
+
+.next-level-btn {
+    background: linear-gradient(135deg, var(--primary-text), var(--warning-color));
+}
+
+.next-level-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+}
+
+.menu-btn {
+    background: linear-gradient(135deg, var(--secondary-text), var(--accent-text));
+}
+
+.menu-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+}
+
+.auto-advance-timer {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 10px;
+}
+
+.advance-timer-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.advance-timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success-color), var(--primary-text));
+    border-radius: 3px;
+    animation: advanceCountdown 3s linear forwards;
+}
+
+@keyframes advanceCountdown {
+    from { width: 100%; }
+    to { width: 0%; }
+}
+
+.advance-timer-text {
+    font-size: 0.9rem;
+    color: var(--success-color);
+    margin: 0;
+    text-align: center;
+}
+
+#advance-seconds {
+    font-weight: 600;
+    color: var(--primary-text);
 }
 
 /* Footer */
@@ -951,12 +1111,12 @@ body::before {
     }
     
     .game-stats {
-        gap: 15px;
+        gap: 10px;
     }
     
     .stat-item {
-        min-width: 70px;
-        padding: 8px 12px;
+        min-width: 60px;
+        padding: 6px 10px;
     }
     
     .stat-label {
@@ -988,6 +1148,22 @@ body::before {
     
     .level-preview h3 {
         font-size: 1.3rem;
+    }
+    
+    .modal-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .auto-close-timer {
+        max-width: none;
+        order: 2;
+    }
+    
+    .modal-close {
+        align-self: flex-end;
+        order: 1;
     }
     
     .animal-info {
@@ -1032,13 +1208,14 @@ body::before {
     }
     
     .game-stats {
+        display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+        gap: 8px;
     }
     
     .stat-item {
-        min-width: 60px;
-        padding: 6px 10px;
+        min-width: 50px;
+        padding: 4px 8px;
     }
     
     .game-board {
@@ -1075,6 +1252,28 @@ body::before {
     
     .logo-icon {
         font-size: 2.5rem;
+    }
+    
+    .start-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .start-btn, .new-session-btn {
+        width: 100%;
+        max-width: 250px;
+        justify-content: center;
+    }
+    
+    .game-over-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .restart-btn, .next-level-btn, .menu-btn {
+        width: 100%;
+        max-width: 250px;
+        justify-content: center;
     }
 }
 
