@@ -354,6 +354,11 @@ function changeLevel(direction) {
         resetGameState();
         updateUI();
         updateLevelPreview();
+        
+        // Se o jogo estava ativo, reiniciar com o novo nível
+        if (gameState.gameStarted) {
+            startGame();
+        }
     }
 }
 
@@ -377,6 +382,9 @@ function updateLevelPreview() {
 }
 
 function startGame() {
+    // Garantir que o estado seja resetado antes de iniciar
+    resetGameState();
+    
     gameState.gameStarted = true;
     gameState.startTime = Date.now();
     startScreen.style.display = 'none';
@@ -624,9 +632,9 @@ function startAutoCloseTimer() {
     // Resetar a animação da barra
     timerBar.style.animation = 'none';
     timerBar.offsetHeight; // Trigger reflow
-    timerBar.style.animation = 'timerCountdown 3s linear forwards';
+    timerBar.style.animation = 'timerCountdown 10s linear forwards';
     
-    let secondsLeft = 3;
+    let secondsLeft = 10;
     timerSeconds.textContent = secondsLeft;
     
     // Limpar timers anteriores
@@ -643,42 +651,10 @@ function startAutoCloseTimer() {
         }
     }, 1000);
     
-    // Auto-fechar após 3 segundos
+    // Auto-fechar após 10 segundos
     modalAutoCloseTimer = setTimeout(() => {
         closeModal();
-    }, 3000);
-}
-
-function startAutoCloseTimer() {
-    const timerSeconds = document.getElementById('timer-seconds');
-    const timerBar = document.getElementById('timer-bar');
-    
-    // Resetar a animação da barra
-    timerBar.style.animation = 'none';
-    timerBar.offsetHeight; // Trigger reflow
-    timerBar.style.animation = 'timerCountdown 3s linear forwards';
-    
-    let secondsLeft = 3;
-    timerSeconds.textContent = secondsLeft;
-    
-    // Limpar timers anteriores
-    clearTimeout(modalAutoCloseTimer);
-    clearInterval(timerCountdownInterval);
-    
-    // Contador de segundos
-    timerCountdownInterval = setInterval(() => {
-        secondsLeft--;
-        timerSeconds.textContent = secondsLeft;
-        
-        if (secondsLeft <= 0) {
-            clearInterval(timerCountdownInterval);
-        }
-    }, 1000);
-    
-    // Auto-fechar após 3 segundos
-    modalAutoCloseTimer = setTimeout(() => {
-        closeModal();
-    }, 3000);
+    }, 10000);
 }
 
 function startAutoAdvanceTimer() {
@@ -713,16 +689,19 @@ function startAutoAdvanceTimer() {
     
     // Auto-avançar após 3 segundos
     autoAdvanceTimer = setTimeout(() => {
-        gameState.currentLevel++;
-        resetGameState();
-        updateUI();
-        updateLevelPreview();
-        
-        // Fechar modal de game over e iniciar próxima fase automaticamente
-        setTimeout(() => {
-            closeModal();
-            startGame();
-        }, 500);
+        // Garantir que sempre avance para o próximo nível
+        if (gameState.currentLevel < 10) {
+            gameState.currentLevel++;
+            resetGameState();
+            updateUI();
+            updateLevelPreview();
+            
+            // Fechar modal de game over e iniciar próxima fase automaticamente
+            setTimeout(() => {
+                closeModal();
+                startGame();
+            }, 500);
+        }
     }, 3000);
 }
 
@@ -820,6 +799,12 @@ function endGame(victory) {
         // Auto-avançar para próximo nível se não for o último
         if (gameState.currentLevel < 10) {
             startAutoAdvanceTimer();
+        } else {
+            // Se é o último nível, não mostrar timer de avanço
+            const autoAdvanceTimerElement = document.getElementById('auto-advance-timer');
+            if (autoAdvanceTimerElement) {
+                autoAdvanceTimerElement.style.display = 'none';
+            }
         }
     } else {
         gameOverIcon.textContent = '🔄';
@@ -867,12 +852,19 @@ function restartGame() {
     closeModal();
     
     // Manter os animais mostrados mesmo ao reiniciar - só limpar em nova sessão completa
+    const currentLevel = gameState.currentLevel;
+    const shownAnimals = gameState.shownAnimals;
+    const currentScore = gameState.score;
     
     resetGameState();
-    startScreen.style.display = 'flex';
-    gameBoard.classList.remove('active');
-    gameBoard.innerHTML = '';
-    updateUI();
+    gameState.currentLevel = currentLevel;
+    gameState.shownAnimals = shownAnimals;
+    gameState.score = currentScore;
+    
+    // Iniciar o jogo diretamente no nível atual
+    setTimeout(() => {
+        startGame();
+    }, 300);
 }
 
 function goToNextLevel() {
@@ -892,17 +884,32 @@ function goToNextLevel() {
         resetGameState();
         updateUI();
         updateLevelPreview();
-        startGame();
+        
+        // Sempre iniciar o jogo automaticamente
+        setTimeout(() => {
+            startGame();
+        }, 300);
     }
 }
 
 function goToMenu() {
     closeModal();
+    
+    // Resetar estado do jogo mas manter nível atual e animais descobertos
+    const currentLevel = gameState.currentLevel;
+    const shownAnimals = gameState.shownAnimals;
+    const currentScore = gameState.score;
+    
     resetGameState();
+    gameState.currentLevel = currentLevel;
+    gameState.shownAnimals = shownAnimals;
+    gameState.score = currentScore;
+    
     startScreen.style.display = 'flex';
     gameBoard.classList.remove('active');
     gameBoard.innerHTML = '';
     updateUI();
+    updateLevelPreview();
 }
 
 function updateUI() {
@@ -933,7 +940,7 @@ function updateUI() {
         movesRemainingElement.classList.remove('pulse');
     }
     
-    // Atualizar controles de nível
+    // Atualizar controles de nível - permitir navegação livre
     levelDownBtn.disabled = gameState.currentLevel <= 1;
     levelUpBtn.disabled = gameState.currentLevel >= 10;
 }
